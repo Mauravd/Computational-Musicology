@@ -16,10 +16,10 @@ The corpus for this research consists of the 21 albums from:
 - Spillage Village (1) (this is a group consisted of EarthGang, JID, 6lack, Mereba, Brothers Hollywood and Benji) 
 - The two collaborative albums of Dreamville, Revenge of the Dreamers II and Revenge of the Dreamers III.
 
-The artists have also some singles on Spotify and Dreamville has a playlist with 390 songs, these songs will also be used if they are not in an album yet. 
+The artists have also some singles on Spotify and Dreamville has a playlist with 390 songs, these songs will also be used if they are not in an album yet. For all songs, the producer is also mentioned in the credits. This could also add something to the analysis. 
 
 There are a few possible problems with the corpus. The first mixtape of Dreamville is missing on Spotify and therefore cannot be compared.
-The amount of albums differ per artist, which can make it harder to compare some of them to the Revenge of the Dreamers III album than others. For example, Omen has 0 albums  on Spotify and J. Cole has six. Furthermore, various producers have worked on the album, but there is no data on Spotify of which producer worked on what song. This could make a difference. Most songs on the Dreamville album have also features from other artists than Dreamville members that attended the 10 day session. They can also influence the songs.
+The amount of albums differ per artist, which can make it harder to compare some of them to the Revenge of the Dreamers III album than others. For example, Omen has 0 albums  on Spotify and J. Cole has six. Most songs on the Dreamville album have also features from other artists than Dreamville members that attended the 10 day session. They can also influence the songs.
 
 Most interesting songs would be 
 - Down Bad (JID, Bas, J. Cole, EarthGang)
