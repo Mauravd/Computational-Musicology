@@ -1,30 +1,148 @@
 ---
 title: "The influence of artists of Dreamville"
 author: "Maura van der Linden"
-date: "2/9/2021"
+date: "2/15/2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+Dreamville is a record label, founded by hip-hop artist J. Cole and his manager. The label has, apart from J. Cole himself, signed Ari Lennox, Bas, Cozz, Omen, Lute, JID and EarthGang. In total, Dreamville has released three collaborative albums/mixtapes with all members of the label. In 2014, J. Cole announced the first mixtape of Dreamville. In 2015, the second collaborative album was released, Revenge of the Dreamers II. In 2019, Dreamville announced the third compilation album: Revenge of the Dreamers III. This album is different from the first two, as the album is recorded in a 10-day recording session. The artists stayed in the same house for 10 days and finished the songs for the album in this period. In July 2019, this album was released and it earned multiple nominations for the Grammy Awards.
+
+This is a very special way of making music and therefore interesting to investigate. I would like to know which artists had most influence while writing the songs during this 10 days session. The album “Revenge of the Dreamers III” can be compared to the albums of all artists that are part of the Dreamville label. It would make sense if the artists that have contributed to most songs on the album, have most influence, but not necessarily the case.
+
+The corpus for this research consists of the 21 albums from:
+
+J. Cole (6), Ari Lennox (1), Bas (3), Cozz (2), Omen (0), Lute (1)
+JID (2),
+EarthGang (5),
+Spillage Village (1) (this is a group consisted of EarthGang, JID, 6lack, Mereba, Brothers Hollywood and Benji),
+The two collaborative albums of Dreamville, Revenge of the Dreamers II and Revenge of the Dreamers III.
+
+The artists have also some singles on Spotify and Dreamville has a playlist with 390 songs, these songs will also be used if they are not in an album yet. For all songs, the producer is also mentioned in the credits. This could also add something to the analysis.
+
+There are a few possible problems with the corpus. The first mixtape of Dreamville is missing on Spotify and therefore cannot be compared. The amount of albums differ per artist, which can make it harder to compare some of them to the Revenge of the Dreamers III album than others. For example, Omen has 0 albums on Spotify and J. Cole has six. Most songs on the Dreamville album have also features from other artists than Dreamville members that attended the 10 day session. They can also influence the songs.
+
+Most interesting songs would be
+
+Down Bad (JID, Bas, J. Cole, EarthGang)
+1993 (J. Cole, Cozz, EarthGang)
+Revenge (Lute, Omen, Ari Lennox, EarthGang)
+because at least four of the Dreamville members contributed to the song. All members from Dreamville contributed to at least on of the three chosen songs.
+
+```{r}
+library(tidyverse)
+library(spotifyr)
+library(ggplot2)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+data <- get_playlist_audio_features("","66h54sZ0j3xvDBJPk1XOZC")
+dreamers3 <- filter(data, track.album.name == "Revenge Of The Dreamers III: Director's Cut")
+dreamers2 <- filter(data, track.album.name == "Revenge Of The Dreamers II")
+cole <- get_playlist_audio_features("", "7evaNgH2BrFMYrokTFCJOo")
+bas <- get_playlist_audio_features("", "3Uta2kjIvbPeuPF8RjtJ0t")
+jid <- get_playlist_audio_features("", "7A4PKrhNfAOyyRvhNqYC6m")
+lennox <- get_playlist_audio_features("", "5bF40COZ4SfRdScXiiDCUZ")
+cozz <- get_playlist_audio_features("", "4wQbW0MRDbMbzEyH2LhRrX")
+eg <- get_playlist_audio_features("", "4ybSz8brnPhjf3Y8IA9DDZ")
+lute <- get_playlist_audio_features("", "46BW4VB76DZj9GXu4N6CV2")
+```
+```{r}
+artists <- bind_rows(dreamers2 %>%
+                       mutate(artist='RotD 2'),
+                     dreamers3 %>%
+                       mutate(artist='RotD 3'),
+                     cole %>%
+                       mutate(artist='J. Cole'), 
+                     bas %>%
+                       mutate(artist='Bas'),
+                     jid %>%
+                       mutate(artist='JID'),  
+                     lennox %>%
+                       mutate(artist='Ari Lennox'), 
+                     cozz %>%
+                       mutate(artist='Cozz'), 
+                     eg %>%
+                       mutate(artist='Earth Gang'),  
+                     lute %>%
+                       mutate(artist='Lute'))
 ```
 
-## Including Plots
+```{r}
+by_artist <- artists %>%
+  group_by(artist) %>%
+  summarize(mean_dance = mean(danceability),
+            mean_energy = mean(energy), 
+            mean_loudness = mean(loudness),
+            mean_acousticness = mean(acousticness), 
+            mean_instrum = mean(instrumentalness), 
+            mean_valence = mean(valence), 
+            mean_tempo = mean(tempo))
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+ggplot(by_artist, aes(x= artist, y = mean_dance)) +
+  geom_col() +
+  geom_hline(yintercept=0.7038333)
+```
+
+The danceability of the different artists is quite similar.
+
+```{r}
+ggplot(by_artist, aes(x= artist, y = mean_energy)) +
+  geom_col() +
+  geom_hline(yintercept=0.6190333)
+```
+
+The energy of the songs of the different artists are different. Revenge of the Dreamers 2 and Cozz have more energy in their songs than Revenge of the Dreamers 3. J. Cole and Ari Lennox have less energy in their songs. The other artists are quite similar to Revenge of the Dreamers 3.
+
+```{r}
+ggplot(by_artist, aes(x= artist, y = mean_loudness)) +
+  geom_col() +
+  geom_hline(yintercept=-6.476833)
+```
+
+The loudness in the songs is only for Lute similar to the loudness of the songs in Revenge of the Dreamers 3. Ari Lennox, Bas, Earth Gang, J. Cole and JID have songs that are louder and the songs of Cozz and Revenge of the Dreamers 2 are less loud.
+
+```{r}
+ggplot(by_artist, aes(x= artist, y = mean_acousticness)) +
+  geom_col() +
+  geom_hline(yintercept=0.2616933	)
+```
+
+For the acousticness, the differences are not really big. The songs of Lute are more acoustic than the songs of Revenge of the Dreamers 3, the other artists have similar levels of acousticness.
+
+```{r}
+ggplot(by_artist, aes(x= artist, y = mean_instrum)) +
+  geom_col() +
+  geom_hline(yintercept=0.000311181)
+```
+
+The differences in instrumentalness are really small for all artists. Earth Gang has the highest level of instrumentalness and this equals to 0.037, which is small.
+
+```{r}
+ggplot(by_artist, aes(x= artist, y = mean_valence)) +
+  geom_col() +
+  geom_hline(yintercept=0.42887)
+```
+
+The valence for the songs differ. Revenge of the Dreamers 2, Lute, Earth Gang and Ari Lennox have more valence in their songs than Revenge of the Dreamers 3. Bas, J. Cole and Cozz have less valence in their songs than Revenge of the Dreamers 3.
+
+```{r}
+ggplot(by_artist, aes(x= artist, y = mean_tempo)) +
+  geom_col() +
+  geom_hline(yintercept=124.7784)
+```
+
+The tempo of Lute is much lower than the tempo of the songs from the Revenge of the Dreamers 3. The songs of all other artists have also a lower tempo than Revenge of the Dreamers 3, but less than Lute.
+
+Because the artists differ the most on the features valence, energy and loudness, these three features are plotted together. The intercept lines show where Revenge of the Dreamers is positioned for the three features.
+
+```{r}
+ggplot(by_artist, aes(x=mean_loudness, y = mean_energy, size=mean_valence, color=artist)) + 
+  geom_point() +
+  geom_hline(yintercept = 0.6190333, linetype="dashed") +
+  geom_vline(xintercept = -6.476833, linetype="dashed")
+```
+
+
