@@ -1,9 +1,17 @@
 ---
 title: "The influence of artists of Dreamville"
 author: "Maura van der Linden"
-date: "2/15/2021"
-output: html_document
+date: "2/9/2021"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    theme: flatly
+    orientation: columns
+    vertical_layout: fill
+    
 ---
+
+### Introduction
 
 Dreamville is a record label, founded by hip-hop artist J. Cole and his manager. The label has, apart from J. Cole himself, signed Ari Lennox, Bas, Cozz, Omen, Lute, JID and EarthGang. In total, Dreamville has released three collaborative albums/mixtapes with all members of the label. In 2014, J. Cole announced the first mixtape of Dreamville. In 2015, the second collaborative album was released, Revenge of the Dreamers II. In 2019, Dreamville announced the third compilation album: Revenge of the Dreamers III. This album is different from the first two, as the album is recorded in a 10-day recording session. The artists stayed in the same house for 10 days and finished the songs for the album in this period. In July 2019, this album was released and it earned multiple nominations for the Grammy Awards.
 
@@ -11,11 +19,16 @@ This is a very special way of making music and therefore interesting to investig
 
 The corpus for this research consists of the 21 albums from:
 
-J. Cole (6), Ari Lennox (1), Bas (3), Cozz (2), Omen (0), Lute (1)
-JID (2),
-EarthGang (5),
-Spillage Village (1) (this is a group consisted of EarthGang, JID, 6lack, Mereba, Brothers Hollywood and Benji),
-The two collaborative albums of Dreamville, Revenge of the Dreamers II and Revenge of the Dreamers III.
+* J. Cole (6), 
+* Ari Lennox (1), 
+* Bas (3), 
+* Cozz (2), 
+* Omen (0), 
+* Lute (1)
+* JID (2),,
+* EarthGang (5),
+* Spillage Village (1) (this is a group consisted of EarthGang, JID, 6lack, Mereba, Brothers Hollywood and Benji),
+* The two collaborative albums of Dreamville, Revenge of the Dreamers II and Revenge of the Dreamers III.
 
 The artists have also some singles on Spotify and Dreamville has a playlist with 390 songs, these songs will also be used if they are not in an album yet. For all songs, the producer is also mentioned in the credits. This could also add something to the analysis.
 
@@ -23,16 +36,20 @@ There are a few possible problems with the corpus. The first mixtape of Dreamvil
 
 Most interesting songs would be
 
-Down Bad (JID, Bas, J. Cole, EarthGang)
-1993 (J. Cole, Cozz, EarthGang)
-Revenge (Lute, Omen, Ari Lennox, EarthGang)
+* Down Bad (JID, Bas, J. Cole, EarthGang)
+* 1993 (J. Cole, Cozz, EarthGang)
+* Revenge (Lute, Omen, Ari Lennox, EarthGang)
 because at least four of the Dreamville members contributed to the song. All members from Dreamville contributed to at least on of the three chosen songs.
 
 ```{r}
 library(tidyverse)
 library(spotifyr)
 library(ggplot2)
+library(plotly)
+library(compmus)
 ```
+
+### Visualisation
 
 ```{r}
 data <- get_playlist_audio_features("","66h54sZ0j3xvDBJPk1XOZC")
@@ -67,6 +84,7 @@ artists <- bind_rows(dreamers2 %>%
                        mutate(artist='Lute'))
 ```
 
+
 ```{r}
 by_artist <- artists %>%
   group_by(artist) %>%
@@ -80,69 +98,141 @@ by_artist <- artists %>%
 
 ```
 
+
 ```{r}
 ggplot(by_artist, aes(x= artist, y = mean_dance)) +
-  geom_col() +
-  geom_hline(yintercept=0.7038333)
+  geom_col(fill='darkblue') +
+  geom_hline(yintercept=0.7038333, color='darkred') +
+  labs(x = "Artist", y= "Mean danceability", title="Mean danceability per artist")
 ```
 
-The danceability of the different artists is quite similar.
 
 ```{r}
 ggplot(by_artist, aes(x= artist, y = mean_energy)) +
-  geom_col() +
-  geom_hline(yintercept=0.6190333)
+  geom_col(fill='darkblue') +
+  geom_hline(yintercept=0.6190333, color='darkred') +
+  labs(x = "Artist", y= "Mean energy", title="Mean energy per artist")
 ```
 
-The energy of the songs of the different artists are different. Revenge of the Dreamers 2 and Cozz have more energy in their songs than Revenge of the Dreamers 3. J. Cole and Ari Lennox have less energy in their songs. The other artists are quite similar to Revenge of the Dreamers 3.
 
 ```{r}
 ggplot(by_artist, aes(x= artist, y = mean_loudness)) +
-  geom_col() +
-  geom_hline(yintercept=-6.476833)
+  geom_col(fill='darkblue') +
+  geom_hline(yintercept=-6.476833, color='darkred') +
+  labs(x = "Artist", y= "Mean loudness", title="Mean loudness per artist")
 ```
 
-The loudness in the songs is only for Lute similar to the loudness of the songs in Revenge of the Dreamers 3. Ari Lennox, Bas, Earth Gang, J. Cole and JID have songs that are louder and the songs of Cozz and Revenge of the Dreamers 2 are less loud.
 
 ```{r}
 ggplot(by_artist, aes(x= artist, y = mean_acousticness)) +
-  geom_col() +
-  geom_hline(yintercept=0.2616933	)
+  geom_col(fill='darkblue') +
+  geom_hline(yintercept=0.2616933	, color='darkred')+
+  labs(x = "Artist", y= "Mean acousticness", title="Mean acousticness per artist")
 ```
 
-For the acousticness, the differences are not really big. The songs of Lute are more acoustic than the songs of Revenge of the Dreamers 3, the other artists have similar levels of acousticness.
+
 
 ```{r}
 ggplot(by_artist, aes(x= artist, y = mean_instrum)) +
-  geom_col() +
-  geom_hline(yintercept=0.000311181)
+  geom_col(fill='darkblue') +
+  geom_hline(yintercept=0.000311181, color='darkred')+
+  labs(x = "Artist", y= "Mean instrumentalness", title="Mean instrumentalness per artist")
 ```
 
-The differences in instrumentalness are really small for all artists. Earth Gang has the highest level of instrumentalness and this equals to 0.037, which is small.
 
 ```{r}
 ggplot(by_artist, aes(x= artist, y = mean_valence)) +
-  geom_col() +
-  geom_hline(yintercept=0.42887)
+  geom_col(fill='darkblue') +
+  geom_hline(yintercept=0.42887, color='darkred')+
+  labs(x = "Artist", y= "Mean valence", title="Mean valence per artist")
 ```
 
-The valence for the songs differ. Revenge of the Dreamers 2, Lute, Earth Gang and Ari Lennox have more valence in their songs than Revenge of the Dreamers 3. Bas, J. Cole and Cozz have less valence in their songs than Revenge of the Dreamers 3.
+
 
 ```{r}
 ggplot(by_artist, aes(x= artist, y = mean_tempo)) +
-  geom_col() +
-  geom_hline(yintercept=124.7784)
+  geom_col(fill='darkblue') +
+  geom_hline(yintercept=124.7784, color='darkred') +
+  labs(x = "Artist", y= "Mean tempo", title="Mean tempo per artist")
 ```
 
-The tempo of Lute is much lower than the tempo of the songs from the Revenge of the Dreamers 3. The songs of all other artists have also a lower tempo than Revenge of the Dreamers 3, but less than Lute.
 
-Because the artists differ the most on the features valence, energy and loudness, these three features are plotted together. The intercept lines show where Revenge of the Dreamers is positioned for the three features.
+
+*** 
+
+* The danceability of the different artists is quite similar. 
+* The energy of the songs of the different artists are different. Revenge of the Dreamers 2 and Cozz have more energy in their songs than Revenge of the Dreamers 3. J. Cole and Ari Lennox have less energy in their songs. The other artists are quite similar to Revenge of the Dreamers 3.
+* The loudness in the songs is only for Lute similar to the loudness of the songs in Revenge of the Dreamers 3. Ari Lennox, Bas, Earth Gang, J. Cole and JID have songs that are louder and the songs of Cozz and Revenge of the Dreamers 2 are less loud.
+* For the acousticness, the differences are not really big. The songs of Lute are more acoustic than the songs of Revenge of the Dreamers 3, the other artists have similar levels of acousticness.
+* The differences in instrumentalness are really small for all artists. Earth Gang has the highest level of instrumentalness and this equals to 0.037, which is small.
+* The valence for the songs differ. Revenge of the Dreamers 2, Lute, Earth Gang and Ari Lennox have more valence in their songs than Revenge of the Dreamers 3. Bas, J. Cole and Cozz have less valence in their songs than Revenge of the Dreamers 3.
+* The tempo of Lute is much lower than the tempo of the songs from the Revenge of the Dreamers 3. The songs of all other artists have also a lower tempo than Revenge of the Dreamers 3, but less than Lute.
+
+
+### Combination visualisation
 
 ```{r}
-ggplot(by_artist, aes(x=mean_loudness, y = mean_energy, size=mean_valence, color=artist)) + 
+loud_en_val <- ggplot(by_artist, aes(x=mean_loudness, y = mean_energy, size=mean_valence, color=artist)) + 
   geom_point() +
   geom_hline(yintercept = 0.6190333, linetype="dashed") +
-  geom_vline(xintercept = -6.476833, linetype="dashed")
+  geom_vline(xintercept = -6.476833, linetype="dashed") +
+  labs(x = "Mean loudness", y= "Mean energy", color= 'Color: Artist', size='Size: Mean valence', title="Mean loudness, energy and valence per artist")
+
+ggplotly(loud_en_val)
 ```
 
+***
+
+* Because the artists differ the most on the features valence, energy and loudness, these three features are plotted together. The intercept lines show where Revenge of the Dreamers is positioned for the three features.
+
+
+### New visualisation
+```{r}
+middlechild_cole <-
+  get_tidy_audio_analysis("2JvzF1RMd7lE3KmFlsyZD8") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+middlechild_dream <-
+  get_tidy_audio_analysis("2b5scDVCDxVsLalecDLAo2") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+maria_dist <-
+  compmus_long_distance(
+    middlechild_cole %>% mutate(pitches = map(pitches, compmus_normalise, "manhattan")),
+    middlechild_dream %>% mutate(pitches = map(pitches, compmus_normalise, "manhattan")),
+    feature = pitches,
+    method = "aitchison"
+  )
+```
+
+```{r tallis-plot}
+maria <-
+  maria_dist %>%
+  mutate(
+    middlechild_cole = xstart + xduration / 2,
+    middlechild_dream = ystart + yduration / 2
+  ) %>%
+  ggplot(
+    aes(
+      x = middlechild_cole,
+      y = middlechild_dream,
+      fill = d
+    )
+  ) +
+  geom_tile(aes(width = xduration, height = yduration)) +
+  coord_fixed() +
+  scale_x_continuous() +
+  scale_y_continuous() +
+  scale_fill_viridis_c(option = "E", guide = "none") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+  labs(x = "Middle child from J. Cole", y = "Middle child from Dreamville")
+maria
+```
+
+***
+
+* The song 'Middle child' is a song on the Revenge of the Dreamers III album, but also on the album of J. Cole himself. In the used corpus, only one of the songs is added. This plot shows us that it is a good decision to use only one of the two songs, because they are identical.
 
