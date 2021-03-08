@@ -12,12 +12,13 @@ output:
 ---
 
 ```{r}
-library(tidyverse)
+
 library(spotifyr)
 library(ggplot2)
 library(plotly)
 library(compmus)
 library(gridExtra)
+library(tidyverse)
 ```
 
 ```{r}
@@ -67,55 +68,155 @@ by_artist <- artists %>%
 
 ```
 
-### New visualisation
-```{r}
-middlechild_cole <-
-  get_tidy_audio_analysis("2JvzF1RMd7lE3KmFlsyZD8") %>%
-  select(segments) %>%
-  unnest(segments) %>%
-  select(start, duration, pitches)
-middlechild_dream <-
-  get_tidy_audio_analysis("2b5scDVCDxVsLalecDLAo2") %>%
-  select(segments) %>%
-  unnest(segments) %>%
-  select(start, duration, pitches)
-maria_dist <-
-  compmus_long_distance(
-    middlechild_cole %>% mutate(pitches = map(pitches, compmus_normalise, "manhattan")),
-    middlechild_dream %>% mutate(pitches = map(pitches, compmus_normalise, "manhattan")),
-    feature = pitches,
-    method = "aitchison"
-  )
-```
+### NEW Keygram of Down Bad, 1993 and Revenge
 
-```{r tallis-plot}
-maria <-
-  maria_dist %>%
-  mutate(
-    middlechild_cole = xstart + xduration / 2,
-    middlechild_dream = ystart + yduration / 2
-  ) %>%
-  ggplot(
-    aes(
-      x = middlechild_cole,
-      y = middlechild_dream,
-      fill = d
-    )
-  ) +
-  geom_tile(aes(width = xduration, height = yduration)) +
-  coord_fixed() +
-  scale_x_continuous() +
-  scale_y_continuous() +
-  scale_fill_viridis_c(option = "E", guide = "none") +
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
-  labs(x = "Middle child from J. Cole", y = "Middle child from Dreamville")
-maria
+```{r twenty-five}
+circshift <- function(v, n) {if (n == 0) v else c(tail(v, n), head(v, -n))}
+                                    
+major_key <- 
+    c(6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88)
+minor_key <-
+    c(6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17)
+key_templates <-
+    tribble(
+        ~name    , ~template,
+        'Gb:maj', circshift(major_key,  6),
+        'Bb:min', circshift(minor_key, 10),
+        'Db:maj', circshift(major_key,  1),
+        'F:min' , circshift(minor_key,  5),
+        'Ab:maj', circshift(major_key,  8),
+        'C:min' , circshift(minor_key,  0),
+        'Eb:maj', circshift(major_key,  3),
+        'G:min' , circshift(minor_key,  7),
+        'Bb:maj', circshift(major_key, 10),
+        'D:min' , circshift(minor_key,  2),
+        'F:maj' , circshift(major_key,  5),
+        'A:min' , circshift(minor_key,  9),
+        'C:maj' , circshift(major_key,  0),
+        'E:min' , circshift(minor_key,  4),
+        'G:maj' , circshift(major_key,  7),
+        'B:min' , circshift(minor_key, 11),
+        'D:maj' , circshift(major_key,  2),
+        'F#:min', circshift(minor_key,  6),
+        'A:maj' , circshift(major_key,  9),
+        'C#:min', circshift(minor_key,  1),
+        'E:maj' , circshift(major_key,  4),
+        'G#:min', circshift(minor_key,  8),
+        'B:maj' , circshift(major_key, 11),
+        'D#:min', circshift(minor_key,  3))
+downbad <- 
+    get_tidy_audio_analysis('1SYZeqExX1250udNlaEAze') %>% 
+    compmus_align(sections, segments) %>% 
+    select(sections) %>% unnest(sections) %>% 
+    mutate(
+        pitches = 
+            map(segments, 
+                compmus_summarise, pitches, 
+                method = 'acentre', norm = 'manhattan')) %>% 
+    compmus_match_pitch_template(key_templates, 'aitchison', 'manhattan') %>% 
+    ggplot(
+        aes(x = start + duration / 2, width = duration, y = name, fill = d)) +
+    geom_tile() +
+    scale_fill_viridis_c(option = 'E', guide = "none") +
+    theme_minimal() +
+    labs(x = 'Time (s)', y = '', fill = 'Distance', title="Down Bad")
+
+
+nineteen <- 
+    get_tidy_audio_analysis('5lnkEsVe0nThSA7YcvzTLA') %>% 
+    compmus_align(sections, segments) %>% 
+    select(sections) %>% unnest(sections) %>% 
+    mutate(
+        pitches = 
+            map(segments, 
+                compmus_summarise, pitches, 
+                method = 'acentre', norm = 'manhattan')) %>% 
+    compmus_match_pitch_template(key_templates, 'aitchison', 'manhattan') %>% 
+    ggplot(
+        aes(x = start + duration / 2, width = duration, y = name, fill = d)) +
+    geom_tile() +
+    scale_fill_viridis_c(option = 'E', guide = "none") +
+    theme_minimal() +
+    labs(x = 'Time (s)', y = '', fill = 'Distance', title="1993")
+
+
+revenge <- 
+    get_tidy_audio_analysis('54DECsrTA7p2WdAllfCupL') %>% 
+    compmus_align(sections, segments) %>% 
+    select(sections) %>% unnest(sections) %>% 
+    mutate(
+        pitches = 
+            map(segments, 
+                compmus_summarise, pitches, 
+                method = 'acentre', norm = 'manhattan')) %>% 
+    compmus_match_pitch_template(key_templates, 'aitchison', 'manhattan') %>% 
+    ggplot(
+        aes(x = start + duration / 2, width = duration, y = name, fill = d)) +
+    geom_tile() +
+    scale_fill_viridis_c(option = 'E', guide = "none") +
+    theme_minimal() +
+    labs(x = 'Time (s)', y = '', fill = 'Distance', title ="Revenge") 
+
+grid.arrange(downbad,nineteen,revenge, ncol=2)
 ```
 
 ***
 
-* The song 'Middle child' is a song on the Revenge of the Dreamers III album, but also on the album of J. Cole himself. In the used corpus, only one of the songs is added. This plot shows us that it is a good decision to use only one of the two songs, because they are identical.
+The three songs from the Revenge of the Dreamers album that include a lot of artists from the corpus are 
+
+* Down Bad (JID, Bas, J. Cole, EarthGang)
+* 1993 (J. Cole, Cozz, EarthGang)
+* Revenge (Lute, Omen, Ari Lennox, EarthGang)
+
+This is why these songs are plotted in the keygrams. There is a lot of yellow bars in the keygrams. 
+
+### NEW (because I did not make it last week) Structure of the song 'Revenge' (Chroma & timbre)
+
+```{r hazes}
+bzt <-
+  get_tidy_audio_analysis("54DECsrTA7p2WdAllfCupL") %>%
+  compmus_align(bars, segments) %>%
+  select(bars) %>%
+  unnest(bars) %>%
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "acentre", norm = "manhattan"
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "mean"
+      )
+  )
+bind_rows(
+  bzt %>% 
+    compmus_self_similarity(pitches, "aitchison") %>% 
+    mutate(d = d / max(d), type = "Chroma"),
+  bzt %>% 
+    compmus_self_similarity(timbre, "euclidean") %>% 
+    mutate(d = d / max(d), type = "Timbre")
+) %>%
+  mutate() %>% 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  facet_wrap(~type) +
+  scale_fill_viridis_c(option = "E", guide = "none") +
+  theme_classic() + 
+  labs(x = "", y = "", title="Revenge: chroma and timbre structure")
+```
 
 ### Introduction
 
@@ -218,5 +319,54 @@ ggplotly(loud_en_val)
 
 Because the artists differ the most on the features valence, energy and loudness, these three features are plotted together. The intercept lines show where Revenge of the Dreamers is positioned for the three features. This makes it easy to see which artist are similar on these features to Revenge of the Dreamers III. The three most similar artists on these features are Lute, JID and EarthGang. Lute is similar on all three features, JID and EarthGang on energy and valence.
 
+### Chroma features
+```{r}
+middlechild_cole <-
+  get_tidy_audio_analysis("2JvzF1RMd7lE3KmFlsyZD8") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+middlechild_dream <-
+  get_tidy_audio_analysis("2b5scDVCDxVsLalecDLAo2") %>%
+  select(segments) %>%
+  unnest(segments) %>%
+  select(start, duration, pitches)
+maria_dist <-
+  compmus_long_distance(
+    middlechild_cole %>% mutate(pitches = map(pitches, compmus_normalise, "manhattan")),
+    middlechild_dream %>% mutate(pitches = map(pitches, compmus_normalise, "manhattan")),
+    feature = pitches,
+    method = "aitchison"
+  )
+```
+
+```{r tallis-plot}
+maria <-
+  maria_dist %>%
+  mutate(
+    middlechild_cole = xstart + xduration / 2,
+    middlechild_dream = ystart + yduration / 2
+  ) %>%
+  ggplot(
+    aes(
+      x = middlechild_cole,
+      y = middlechild_dream,
+      fill = d
+    )
+  ) +
+  geom_tile(aes(width = xduration, height = yduration)) +
+  coord_fixed() +
+  scale_x_continuous() +
+  scale_y_continuous() +
+  scale_fill_viridis_c(option = "E", guide = "none") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+  labs(x = "Middle child from J. Cole", y = "Middle child from Dreamville")
+maria
+```
+
+***
+
+* The song 'Middle child' is a song on the Revenge of the Dreamers III album, but also on the album of J. Cole himself. In the used corpus, only one of the songs is added. This plot shows us that it is a good decision to use only one of the two songs, because they are identical.
 
 
