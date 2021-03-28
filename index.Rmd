@@ -68,45 +68,6 @@ by_artist <- artists %>%
 
 ```
 
-### NEW Tempo
-
-```{r}
-down <- get_tidy_audio_analysis('1SYZeqExX1250udNlaEAze') %>% 
-    tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) %>% 
-    ggplot(aes(x = time, y = bpm, fill = power)) + 
-    geom_raster() + 
-    scale_fill_viridis_c(guide = 'none') +
-    labs(x = 'Time (s)', y = 'Tempo (BPM)', title = "Down Bad") +
-    theme_classic()
-  
-nine <- get_tidy_audio_analysis('5lnkEsVe0nThSA7YcvzTLA') %>% 
-    tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) %>% 
-    ggplot(aes(x = time, y = bpm, fill = power)) + 
-    geom_raster() + 
-    scale_fill_viridis_c(guide = 'none') +
-    labs(x = 'Time (s)', y = 'Tempo (BPM)', title = "1993") +
-    theme_classic()
-
-rev <- get_tidy_audio_analysis('54DECsrTA7p2WdAllfCupL') %>% 
-    tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) %>% 
-    ggplot(aes(x = time, y = bpm, fill = power)) + 
-    geom_raster() + 
-    scale_fill_viridis_c(guide = 'none') +
-    labs(x = 'Time (s)', y = 'Tempo (BPM)', title = "Revenge") +
-    theme_classic()
-
-grid.arrange(down,nine,rev, ncol=2)
-```
-
-***
-
-The three songs from the Revenge of the Dreamers album that include a lot of artists from the corpus are 
-
-* Down Bad (JID, Bas, J. Cole, EarthGang)
-* 1993 (J. Cole, Cozz, EarthGang)
-* Revenge (Lute, Omen, Ari Lennox, EarthGang)
-
-This is why these songs are plotted in the tempograms. 
 
 ### Introduction
 
@@ -120,26 +81,26 @@ The corpus for this research consists of the 21 albums from:
 * Ari Lennox (1), 
 * Bas (3), 
 * Cozz (2), 
-* Omen (0), 
 * Lute (1)
 * JID (2),,
 * EarthGang (5),
 * Spillage Village (1) (this is a group consisted of EarthGang, JID, 6lack, Mereba, Brothers Hollywood and Benji),
 * The two collaborative albums of Dreamville, Revenge of the Dreamers II and Revenge of the Dreamers III.
 
-The artists have also some singles on Spotify and Dreamville has a playlist with 390 songs, these songs will also be used if they are not in an album yet. For all songs, the producer is also mentioned in the credits. This could also add something to the analysis.
+The artists have also some singles on Spotify and Dreamville has a playlist with 390 songs, these songs will also be used if they are not in an album yet. 
 
 There are a few possible problems with the corpus. The first mixtape of Dreamville is missing on Spotify and therefore cannot be compared. The amount of albums differ per artist, which can make it harder to compare some of them to the Revenge of the Dreamers III album than others. For example, Omen has 0 albums on Spotify and J. Cole has six. Most songs on the Dreamville album have also features from other artists than Dreamville members that attended the 10 day session. They can also influence the songs.
 
-Most interesting songs would be
+Most interesting songs of the Dreamville III album are
 
 * Down Bad (JID, Bas, J. Cole, EarthGang)
 * 1993 (J. Cole, Cozz, EarthGang)
 * Revenge (Lute, Omen, Ari Lennox, EarthGang)
-because at least four of the Dreamville members contributed to the song. All members from Dreamville contributed to at least on of the three chosen songs.
+because at least four of the Dreamville members contributed to the song. All members from Dreamville contributed to at least on of the three chosen songs. 
 
+The features of all artists will be compared to the features of Revenge of the Dreamers III. The three interesting songs of the album will also be looked into more by the use of tempo-, key- and chromagrams. The results of this comparison  and the grams can suggest which artists are most similar to the collaborative album. This hypothesis can be tested with the use of clustering. By means of clustering, it is possible to estimate what artist would be most likely to have written the song, because it is most similar to their own songs.
 
-### Track level features comparison between Revenge of the Dreamers and the artists.
+### Track level features comparison between Revenge of the Dreamers III and the artists.
 
 
 ```{r}
@@ -193,7 +154,7 @@ grid.arrange(dance, energy, loudness, acoust, instrum, valence, tempo, ncol=3)
 * The tempo of Lute is much lower than the tempo of the songs from the Revenge of the Dreamers 3. The songs of all other artists have also a lower tempo than Revenge of the Dreamers 3, but less than Lute.
 
 
-### Comparison of Valence, Energy and Loudness combined.
+### Comparison of Valence, Energy and Loudness from all artists combined
 
 ```{r}
 loud_en_val <- ggplot(by_artist, aes(x=mean_loudness, y = mean_energy, size=mean_valence, color=artist)) + 
@@ -207,9 +168,9 @@ ggplotly(loud_en_val)
 
 ***
 
-Because the artists differ the most on the features valence, energy and loudness, these three features are plotted together. The intercept lines show where Revenge of the Dreamers is positioned for the three features. This makes it easy to see which artist are similar on these features to Revenge of the Dreamers III. The three most similar artists on these features are Lute, JID and EarthGang. Lute is similar on all three features, JID and EarthGang on energy and valence.
+Because the artists differ the most on the features valence, energy and loudness, these three features are plotted together. The intercept lines show where Revenge of the Dreamers is positioned for the three features. This makes it easy to see which artist are similar on these features to Revenge of the Dreamers III. The three most similar artists on these features are Lute, JID and EarthGang. Lute is similar on all three features, JID and EarthGang on energy and valence. Based on this plot, you could suggest that Lute is most influential for the Revenge of the Dreamers album.
 
-### Chroma features
+### Comparison between two versions of the song Middle Child
 ```{r}
 middlechild_cole <-
   get_tidy_audio_analysis("2JvzF1RMd7lE3KmFlsyZD8") %>%
@@ -257,10 +218,17 @@ maria
 
 ***
 
-* The song 'Middle child' is a song on the Revenge of the Dreamers III album, but also on the album of J. Cole himself. In the used corpus, only one of the songs is added. This plot shows us that it is a good decision to use only one of the two songs, because they are identical.
+The song 'Middle child' is a song on the Revenge of the Dreamers III album, but also on the album of J. Cole himself. In the used corpus, only one of the songs is added. If you listen to the songs, they sound identical:
+
+{=html}
+<object data="https://open.spotify.com/embed/track/2b5scDVCDxVsLalecDLAo2" width="280" height="140">
+    <embed src="https://open.spotify.com/embed/track/2b5scDVCDxVsLalecDLAo2" width="280" height="140"></embed>
+</object>
+
+This plot shows us that it is a good decision to use only one of the two songs, because they are identical. This is shown by the path-like structure.
 
 
-### Keygram of Down Bad, 1993 and Revenge
+### Keygrams of the songs Down Bad, 1993 and Revenge
 
 ```{r twenty-five}
 circshift <- function(v, n) {if (n == 0) v else c(tail(v, n), head(v, -n))}
@@ -410,3 +378,48 @@ bind_rows(
   labs(x = "", y = "",title="Revenge: chroma and timbre structure")
 ```
 
+### The tempo of the songs Down Bad, 1993 and Revenge
+
+```{r}
+down <- get_tidy_audio_analysis('1SYZeqExX1250udNlaEAze') %>% 
+    tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) %>% 
+    ggplot(aes(x = time, y = bpm, fill = power)) + 
+    geom_raster() + 
+    scale_fill_viridis_c(guide = 'none') +
+    labs(x = 'Time (s)', y = 'Tempo (BPM)', title = "Down Bad") +
+    theme_classic()
+  
+nine <- get_tidy_audio_analysis('5lnkEsVe0nThSA7YcvzTLA') %>% 
+    tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) %>% 
+    ggplot(aes(x = time, y = bpm, fill = power)) + 
+    geom_raster() + 
+    scale_fill_viridis_c(guide = 'none') +
+    labs(x = 'Time (s)', y = 'Tempo (BPM)', title = "1993") +
+    theme_classic()
+
+rev <- get_tidy_audio_analysis('54DECsrTA7p2WdAllfCupL') %>% 
+    tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) %>% 
+    ggplot(aes(x = time, y = bpm, fill = power)) + 
+    geom_raster() + 
+    scale_fill_viridis_c(guide = 'none') +
+    labs(x = 'Time (s)', y = 'Tempo (BPM)', title = "Revenge") +
+    theme_classic()
+
+grid.arrange(down,nine,rev, ncol=2)
+```
+
+***
+
+The three songs from the Revenge of the Dreamers album that include a lot of artists from the corpus are 
+
+* Down Bad (JID, Bas, J. Cole, EarthGang)
+* 1993 (J. Cole, Cozz, EarthGang)
+* Revenge (Lute, Omen, Ari Lennox, EarthGang)
+
+This is why these songs are plotted in the tempograms. Based on these plots, it is easy to say that the tempo of the songs are changing all the time, especially for the song 1993. Because a lot of artists participate in the songs, it is possible that the 
+
+
+### Clustering estimation for the RoTD III songs
+
+
+### Conclusion
