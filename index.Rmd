@@ -1,7 +1,7 @@
 ---
-title: "The influence of artists of Dreamville"
+title: "The influence of artists in the songs of Dreamville"
 author: "Maura van der Linden"
-date: "2/9/2021"
+date: "3/29/2021"
 output: 
   flexdashboard::flex_dashboard:
     storyboard: true
@@ -19,6 +19,25 @@ library(plotly)
 library(compmus)
 library(gridExtra)
 library(tidyverse)
+library(purrr)
+library(scales)
+library(C50)
+library(recipes)
+library(rsample)
+library(parsnip)
+#library(Cairo)
+
+#source('spotify.R')
+#library(CGPfunctions)
+#library(viridis)
+library(tidymodels)
+library(kknn)
+#library(protoclust)
+#library(ggdendro)
+#library(heatmaply)
+library(dplyr)
+library(egg)
+library(glmnet)
 ```
 
 ```{r}
@@ -39,17 +58,17 @@ artists <- bind_rows(dreamers2 %>%
                      dreamers3 %>%
                        mutate(artist='RotD 3'),
                      cole %>%
-                       mutate(artist='J. Cole'), 
+                       mutate(artist='Cole'), 
                      bas %>%
                        mutate(artist='Bas'),
                      jid %>%
                        mutate(artist='JID'),  
                      lennox %>%
-                       mutate(artist='Ari Lennox'), 
+                       mutate(artist='Lennox'), 
                      cozz %>%
                        mutate(artist='Cozz'), 
                      eg %>%
-                       mutate(artist='Earth Gang'),  
+                       mutate(artist='EG'),  
                      lute %>%
                        mutate(artist='Lute'))
 ```
@@ -87,9 +106,7 @@ The corpus for this research consists of the 21 albums from:
 * Spillage Village (1) (this is a group consisted of EarthGang, JID, 6lack, Mereba, Brothers Hollywood and Benji),
 * The two collaborative albums of Dreamville, Revenge of the Dreamers II and Revenge of the Dreamers III.
 
-The artists have also some singles on Spotify and Dreamville has a playlist with 390 songs, these songs will also be used if they are not in an album yet. 
-
-There are a few possible problems with the corpus. The first mixtape of Dreamville is missing on Spotify and therefore cannot be compared. The amount of albums differ per artist, which can make it harder to compare some of them to the Revenge of the Dreamers III album than others. For example, Omen has 0 albums on Spotify and J. Cole has six. Most songs on the Dreamville album have also features from other artists than Dreamville members that attended the 10 day session. They can also influence the songs.
+There are a few possible problems with the corpus. The first mixtape of Dreamville is missing on Spotify and therefore cannot be compared to the other songs. The amount of albums differ per artist, which can make it harder to compare some of them to the Revenge of the Dreamers III album than others. For example, Omen has 0 albums on Spotify and J. Cole has six. Most songs on the Dreamville album also have features from other artists than Dreamville members that attended the 10 day session. They can also influence the songs.
 
 Most interesting songs of the Dreamville III album are
 
@@ -98,7 +115,7 @@ Most interesting songs of the Dreamville III album are
 * Revenge (Lute, Omen, Ari Lennox, EarthGang)
 because at least four of the Dreamville members contributed to the song. All members from Dreamville contributed to at least on of the three chosen songs. 
 
-The features of all artists will be compared to the features of Revenge of the Dreamers III. The three interesting songs of the album will also be looked into more by the use of tempo-, key- and chromagrams. The results of this comparison  and the grams can suggest which artists are most similar to the collaborative album. This hypothesis can be tested with the use of clustering. By means of clustering, it is possible to estimate what artist would be most likely to have written the song, because it is most similar to their own songs.
+The features of all artists will be compared to the features of Revenge of the Dreamers III. The three interesting songs of the album will also be looked into more by the use of tempo-, key- and chromagrams. The results of this comparison  and the grams can suggest which artists are most similar to the collaborative album. This hypothesis can be tested with the use of classification. By means of classification, it is possible to estimate what artist would be most likely to have written the song, because it is most similar to their own songs.
 
 ### Track level features comparison between Revenge of the Dreamers III and the artists.
 
@@ -107,37 +124,44 @@ The features of all artists will be compared to the features of Revenge of the D
 dance <- ggplot(by_artist, aes(x= artist, y = mean_dance)) +
   geom_col(fill='darkblue') +
   geom_hline(yintercept=0.7038333, color='darkred') +
-  labs(x = "Artist", y= "Mean danceability", title="Mean danceability per artist")
+  labs(x = "Artist",  y= "Danceability") +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))
 
 energy <- ggplot(by_artist, aes(x= artist, y = mean_energy)) +
   geom_col(fill='darkblue') +
   geom_hline(yintercept=0.6190333, color='darkred') +
-  labs(x = "Artist", y= "Mean energy", title="Mean energy per artist")
+  labs(x = "Artist", y= "Energy") +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))
 
 loudness <- ggplot(by_artist, aes(x= artist, y = mean_loudness)) +
   geom_col(fill='darkblue') +
   geom_hline(yintercept=-6.476833, color='darkred') +
-  labs(x = "Artist", y= "Mean loudness", title="Mean loudness per artist")
+  labs(x = "Artist", y= "Loudness") +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))
 
 acoust <- ggplot(by_artist, aes(x= artist, y = mean_acousticness)) +
   geom_col(fill='darkblue') +
   geom_hline(yintercept=0.2616933	, color='darkred')+
-  labs(x = "Artist", y= "Mean acousticness", title="Mean acousticness per artist")
+  labs(x = "Artist", y= "Acousticness") +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))
 
 instrum <- ggplot(by_artist, aes(x= artist, y = mean_instrum)) +
   geom_col(fill='darkblue') +
   geom_hline(yintercept=0.000311181, color='darkred')+
-  labs(x = "Artist", y= "Mean instrumentalness", title="Mean instrumentalness per artist")
+  labs(x = "Artist", y= "Instrumentalness") +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))
 
 valence <- ggplot(by_artist, aes(x= artist, y = mean_valence)) +
   geom_col(fill='darkblue') +
   geom_hline(yintercept=0.42887, color='darkred')+
-  labs(x = "Artist", y= "Mean valence", title="Mean valence per artist")
+  labs(x = "Artist", y= "Valence") +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))
 
 tempo <- ggplot(by_artist, aes(x= artist, y = mean_tempo)) +
   geom_col(fill='darkblue') +
   geom_hline(yintercept=124.7784, color='darkred') +
-  labs(x = "Artist", y= "Mean tempo", title="Mean tempo per artist")
+  labs(x = "Artist", y= "Tempo") +
+  theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1))
 
 
 grid.arrange(dance, energy, loudness, acoust, instrum, valence, tempo, ncol=3)
@@ -145,11 +169,13 @@ grid.arrange(dance, energy, loudness, acoust, instrum, valence, tempo, ncol=3)
 
 *** 
 
+The mean of the values for all spotify features are shown in the plots here. 
+
 * The danceability of the different artists is quite similar. 
 * The energy of the songs of the different artists are different. Revenge of the Dreamers 2 and Cozz have more energy in their songs than Revenge of the Dreamers 3. J. Cole and Ari Lennox have less energy in their songs. The other artists are quite similar to Revenge of the Dreamers 3.
 * The loudness in the songs is only for Lute similar to the loudness of the songs in Revenge of the Dreamers 3. Ari Lennox, Bas, Earth Gang, J. Cole and JID have songs that are louder and the songs of Cozz and Revenge of the Dreamers 2 are less loud.
 * For the acousticness, the differences are not really big. The songs of Lute are more acoustic than the songs of Revenge of the Dreamers 3, the other artists have similar levels of acousticness.
-* The differences in instrumentalness are really small for all artists. Earth Gang has the highest level of instrumentalness and this equals to 0.037, which is small.
+* Although they look big in the plot, the differences in instrumentalness are really small for all artists. Earth Gang has the highest level of instrumentalness and this equals to 0.037, which is small.
 * The valence for the songs differ. Revenge of the Dreamers 2, Lute, Earth Gang and Ari Lennox have more valence in their songs than Revenge of the Dreamers 3. Bas, J. Cole and Cozz have less valence in their songs than Revenge of the Dreamers 3.
 * The tempo of Lute is much lower than the tempo of the songs from the Revenge of the Dreamers 3. The songs of all other artists have also a lower tempo than Revenge of the Dreamers 3, but less than Lute.
 
@@ -168,7 +194,7 @@ ggplotly(loud_en_val)
 
 ***
 
-Because the artists differ the most on the features valence, energy and loudness, these three features are plotted together. The intercept lines show where Revenge of the Dreamers is positioned for the three features. This makes it easy to see which artist are similar on these features to Revenge of the Dreamers III. The three most similar artists on these features are Lute, JID and EarthGang. Lute is similar on all three features, JID and EarthGang on energy and valence. Based on this plot, you could suggest that Lute is most influential for the Revenge of the Dreamers album.
+Because the artists differ the most on the features valence, energy and loudness, these three features are plotted together. The intercept lines show where Revenge of the Dreamers is positioned for the three features. This makes it easy to see which artist are similar on these features to Revenge of the Dreamers III. The three most similar artists on these features are Lute, JID and EarthGang. Lute is similar on all three features, JID and EarthGang on energy and valence. Based on this plot, you could suggest that Lute is most influential for the Revenge of the Dreamers album, and JID would be second.
 
 ### Comparison between two versions of the song Middle Child
 ```{r}
@@ -220,9 +246,12 @@ maria
 
 The song 'Middle child' is a song on the Revenge of the Dreamers III album, but also on the album of J. Cole himself. In the used corpus, only one of the songs is added. If you listen to the songs, they sound identical:
 
-{=html}
 <object data="https://open.spotify.com/embed/track/2b5scDVCDxVsLalecDLAo2" width="280" height="140">
     <embed src="https://open.spotify.com/embed/track/2b5scDVCDxVsLalecDLAo2" width="280" height="140"></embed>
+</object>
+
+<object data="https://open.spotify.com/embed/track/2JvzF1RMd7lE3KmFlsyZD8" width="280" height="140">
+    <embed src="https://open.spotify.com/embed/track/2JvzF1RMd7lE3KmFlsyZD8" width="280" height="140"></embed>
 </object>
 
 This plot shows us that it is a good decision to use only one of the two songs, because they are identical. This is shown by the path-like structure.
@@ -317,23 +346,23 @@ revenge <-
     theme_minimal() +
     labs(x = 'Time (s)', y = '', fill = 'Distance', title ="Revenge") 
 
-grid.arrange(downbad,nineteen,revenge, ncol=2)
+grid.arrange(downbad,nineteen,revenge, ncol=3)
 ```
 
 ***
 
-The three songs from the Revenge of the Dreamers album that include a lot of artists from the corpus are 
+The three most interesting songs from the Revenge of the Dreamers album that include a lot of artists from the corpus are 
 
 * Down Bad (JID, Bas, J. Cole, EarthGang)
 * 1993 (J. Cole, Cozz, EarthGang)
 * Revenge (Lute, Omen, Ari Lennox, EarthGang)
 
-This is why these songs are plotted in the keygrams. There is a lot of yellow bars in the keygrams. 
+The keygrams of the songs are shown here. For all three songs, there are a lot of yellow bars in the keygram, which means it is hard to find the general key of the songs. Reasons for this could be that most songs the artists are rapping most of the time and the music behind it is not made out of triad chords.
 
-### Structure of Revenge
+### Structure of Down Bad, 1993 and Revenge by means of Self Similarity Matrices
 
 ```{r hazes}
-bzt <-
+rv <-
   get_tidy_audio_analysis("54DECsrTA7p2WdAllfCupL") %>%
   compmus_align(bars, segments) %>%
   select(bars) %>%
@@ -352,11 +381,12 @@ bzt <-
         method = "mean"
       )
   )
-bind_rows(
-  bzt %>% 
+
+revenge <- bind_rows(
+  rv %>% 
     compmus_self_similarity(pitches, "aitchison") %>% 
     mutate(d = d / max(d), type = "Chroma"),
-  bzt %>% 
+  rv %>% 
     compmus_self_similarity(timbre, "euclidean") %>% 
     mutate(d = d / max(d), type = "Timbre")
 ) %>%
@@ -375,8 +405,106 @@ bind_rows(
   facet_wrap(~type) +
   scale_fill_viridis_c(option = "E", guide = "none") +
   theme_classic() + 
-  labs(x = "", y = "",title="Revenge: chroma and timbre structure")
+  labs(x = "", y = "",title="Revenge")
+
+nt <-
+  get_tidy_audio_analysis("5lnkEsVe0nThSA7YcvzTLA") %>%
+  compmus_align(bars, segments) %>%
+  select(bars) %>%
+  unnest(bars) %>%
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "acentre", norm = "manhattan"
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "mean"
+      )
+  )
+
+nineteen <- bind_rows(
+  nt %>% 
+    compmus_self_similarity(pitches, "aitchison") %>% 
+    mutate(d = d / max(d), type = "Chroma"),
+  nt %>% 
+    compmus_self_similarity(timbre, "euclidean") %>% 
+    mutate(d = d / max(d), type = "Timbre")
+) %>%
+  mutate() %>% 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  facet_wrap(~type) +
+  scale_fill_viridis_c(option = "E", guide = "none") +
+  theme_classic() + 
+  labs(x = "", y = "",title="1993")
+
+db <-
+  get_tidy_audio_analysis("1SYZeqExX1250udNlaEAze") %>%
+  compmus_align(bars, segments) %>%
+  select(bars) %>%
+  unnest(bars) %>%
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "acentre", norm = "manhattan"
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "mean"
+      )
+  )
+
+downbad <- bind_rows(
+  db %>% 
+    compmus_self_similarity(pitches, "aitchison") %>% 
+    mutate(d = d / max(d), type = "Chroma"),
+  db %>% 
+    compmus_self_similarity(timbre, "euclidean") %>% 
+    mutate(d = d / max(d), type = "Timbre")
+) %>%
+  mutate() %>% 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  facet_wrap(~type) +
+  scale_fill_viridis_c(option = "E", guide = "none") +
+  theme_classic() + 
+  labs(x = "", y = "",title="Down Bad")
+
+grid.arrange(downbad,nineteen,revenge, ncol=2)
 ```
+
+***
+
+The Self Similarity Matrices based on chroma and timbre for the songs 'Down Bad', '1993' and 'Revenge' are shown here. Although the plots for the three songs look quite different, there are also some similarities. For all plots, there is a clear block structure with a lot of corners. A corners means that a new part of the song starts. There are no clear diagonal paths shown, so there is not a lot of repetition in this song. 
+
+What can be concluded from these plots, is that the different artist have the same style with a lot of novelties in their songs. This is as expected, because the songs are all composed by a lot of different artist at the same time. Instead of doing the standard chorus & verse variation, the songs often consist of separate parts.
 
 ### The tempo of the songs Down Bad, 1993 and Revenge
 
@@ -410,16 +538,171 @@ grid.arrange(down,nine,rev, ncol=2)
 
 ***
 
-The three songs from the Revenge of the Dreamers album that include a lot of artists from the corpus are 
+The most interesting three songs from the Revenge of the Dreamers album that include a lot of artists from the corpus are 
 
 * Down Bad (JID, Bas, J. Cole, EarthGang)
 * 1993 (J. Cole, Cozz, EarthGang)
 * Revenge (Lute, Omen, Ari Lennox, EarthGang)
 
-This is why these songs are plotted in the tempograms. Based on these plots, it is easy to say that the tempo of the songs are changing all the time, especially for the song 1993. Because a lot of artists participate in the songs, it is possible that the 
+Based on the tempograms for these songs, it is easy to say that the tempo of the songs are changing all the time, especially for the song 1993. 
 
 
-### Clustering estimation for the RoTD III songs
+### Classification with Multinomial Regression
+
+```{r}
+dreamers3 <- filter(data, track.album.name == "Revenge Of The Dreamers III: Director's Cut")  %>%
+  add_audio_analysis
+cole <- get_playlist_audio_features("", "29hlZ9T4V1R7vSu9AiwoEu")  %>%
+  add_audio_analysis
+bas <- get_playlist_audio_features("", "5XY7ZUi0MNmIeBNxZ7cMCq")  %>%
+  add_audio_analysis
+jid <- get_playlist_audio_features("", "7D4bQWgWAvJW1GXr8bGQG6")  %>%
+  add_audio_analysis
+lennox <- get_playlist_audio_features("", "2k8t8dApZsNYc7UCvntXvG")  %>%
+  add_audio_analysis
+cozz <- get_playlist_audio_features("", "4fZY3V6jcmjRMMdryy0XUz")  %>%
+  add_audio_analysis
+eg <- get_playlist_audio_features("", "0zxzfntyFRw28qf8k85IEt")  %>%
+  add_audio_analysis
+lute <- get_playlist_audio_features("", "590WUZK2d528TVSPRMLDKo")  %>%
+  add_audio_analysis
+
+Playlists <-
+    dreamers3 %>% mutate(playlist = "RotD 3") %>%
+    bind_rows(
+        cole %>% mutate(playlist = "J. Cole"),
+        bas %>% mutate(playlist = "Bas"),
+        jid %>% mutate(playlist = "JID"),
+        lennox %>% mutate(playlist = "Ari Lennox"),
+        cozz %>% mutate(playlist = "Cozz"),
+        eg %>% mutate(playlist = "EarthGang"),
+        lute %>% mutate(playlist = "Lute")) %>%
+    mutate(playlist = factor(playlist)) %>%
+    mutate(
+        segments =
+            map2(segments, key, compmus_c_transpose)) %>%
+    mutate(
+        pitches =
+            map(segments,
+                compmus_summarise, pitches,
+                method = 'mean', norm = 'manhattan'),
+        timbre =
+            map(
+                segments,
+                compmus_summarise, timbre,
+                method = 'mean')) %>%
+    mutate(pitches = map(pitches, compmus_normalise, 'clr')) %>%
+    mutate_at(vars(pitches, timbre), map, bind_rows) %>%
+    unnest(cols = c(pitches, timbre))
+```
+
+```{r}
+### Pre-processing
+Playlists_class <-
+    recipe(playlist ~ # You probably only need to play this playlist, so the thing you want to predict.
+               danceability +
+               energy +
+               loudness +
+               speechiness +
+               acousticness +
+               instrumentalness +
+               liveness +
+               valence +
+               tempo +
+               duration +
+               C + `C#|Db` + D + `D#|Eb` +
+               E + `F` + `F#|Gb` + G +
+               `G#|Ab` + A + `A#|Bb` + B +
+               c01 + c02 + c03 + c04 + c05 + c06 +
+               c07 + c08 + c09 + c10 + c11 + c12,
+           data = Playlists) %>%
+    step_center(all_predictors()) %>% # This one works better most of the times, if not try the step range.
+    step_scale(all_predictors()) %>% # Change the scale to z-scores
+    # step_range(all_predictors()) %>%
+    prep(Playlists) %>%
+    juice
+### Cross-Validation
+# The `vfold_cv` function sets up cross-validation. We will use 5-fold cross-validation here in the interest of speed, but 10-fold cross-validation is more typical.
+
+Playlists_cv <- Playlists_class %>% vfold_cv(5) # Use either 5 or 10: It splits your data in e.g. 5 parts. And does a k-fold crossvalidation
+### Classification Algorithms
+#### $k$-Nearest Neighbour
+# A $k$-nearest neighbour classifier often works just fine with only one neighbour. It is very sensitive to the choice of features, however. Let's check the performance as a baseline and come back to it later.
+#
+#  Just run this code if you want to use k nearest neighbour.
+Playlists_knn <-
+    nearest_neighbor(mode = 'classification', neighbors = 1) %>%
+    set_engine('kknn')
+Playlists_predict_knn <- function(split)
+    fit(Playlists_knn, playlist ~ ., data = analysis(split)) %>%
+    predict(assessment(split), type = 'class') %>%
+    bind_cols(assessment(split))
+
+#Playlists_cv %>%
+#     mutate(pred = map(splits, Playlists_predict_knn)) %>% unnest(pred) %>%
+#     metric_set(accuracy, kap, j_index)(truth = playlist, estimate = .pred_class)
+
+# These matrices `autoplot` in two forms.
+Playlists_multinom <-
+    multinom_reg(mode = 'classification', penalty = 0.1) %>%
+    set_engine('glmnet')
+Playlists_predict_multinom <- function(split)
+    fit(Playlists_multinom, playlist ~ ., data = analysis(split)) %>%
+    predict(assessment(split), type = 'class') %>%
+    bind_cols(assessment(split))
+
+Playlists_cv %>%
+    mutate(pred = map(splits, Playlists_predict_multinom)) %>% unnest(pred) %>%
+    conf_mat(truth = playlist, estimate = .pred_class) %>%
+    autoplot(type = 'mosaic')
+Playlists_cv %>%
+    mutate(pred = map(splits, Playlists_predict_multinom)) %>% unnest(pred) %>%
+    conf_mat(truth = playlist, estimate = .pred_class) %>%
+    autoplot(type = 'heatmap')
+```
+```{r}
+#Playlists_cv %>%
+#     mutate(pred = map(splits, Playlists_predict_knn)) %>% unnest(pred) %>%
+#     metric_set(accuracy, kap, j_index)(truth = playlist, estimate = .pred_class)
+
+#Playlists_cv %>%
+#     mutate(pred = map(splits, Playlists_predict_multinom)) %>% unnest(pred) %>%
+#     metric_set(accuracy, kap, j_index)(truth = playlist, estimate = .pred_class)
+
+# Multinom important features
+#Playlists_class %>% # For alex: D#/Eb, c05, A#|Bb. for discover weekly 7:speechiness, instrumentalness, duration, for favorites: danceability, C
+#    fit(Playlists_multinom, playlist ~ ., data = .) %>%
+#    pluck('fit') %>%
+#    coef(s = 0)
+```
+
+***
+
+
+This classification tells us the opposite of what we thought after analysing the plots of the track level features. Based on the track level features, we thought that Lute, JID and EarthGang would be most influential. Shown in this classification is that the songs of Revenge of the Dreamers III are almost never predicted as songs of one of those artists.
+
+Interesting to see is that Ari Lennox is often right predicted. This could be because she is the only female member of Revenge of the Dreamers and therefore different from the other artists. 
+
+For Revenge of the Dreamers III the most important features for prediction are:
+
+* Speechiness
+* D#|Eb
+
+At first, I tried the classification with the same data of the whole corpus. Because that data is not balanced, J. Cole and EarthGang had three times as much songs in the dataset as some other artists, so the classification did not work properly. I removed a part of the J. Cole and EarthGang songs so that the artists had approximately the same amount of songs in the dataset. I also removed the collaborative songs of multiple artists, so that every song was part of one artist's dataset. 
+
+For the knn-algorithm, the accuracy shifted from 0.26 to 0.32 when removing the songs from the dataset. The accuracy of the Multinomial Regression is also 0.19. These accuracy values are all really low. 
 
 
 ### Conclusion
+
+By now, I hoped to be able to tell which artists are most influential in the Dreamers group. But unfortunately, based on this research, it is not possible to conclude which artists were most influential during the 10 day session of Revenge of the Dreamers III. From the exploratory plots, the hypotheses followed that the most influential artists would be Lute, JID and EarthGang, but this did not follow from the classification. 
+
+But why is it not possible to see who is most influential? There are multiple possible reasons for this: 
+
+* The artist are quite similar in a lot of features, as is shown in the second tab with the comparison of the track level features. 
+* The classification is hard if there are only 15-25 songs per artist available, and the number of artists (clusters) is this high.
+* The producers could be the people that are most influential, not the artists.
+* Based on the keys, it is also hard to look for differences. The keys were not really found, as shown in the keygrams.
+* Also the tempo was hard to find in the songs, as was shown in the tempograms.
+* From the chroma and timbre structures, it was possible to conclude that the songs consist of a lot of different novel parts, this could also make it difficult to do a classification, because every song might be too unique.
+
